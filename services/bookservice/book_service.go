@@ -215,7 +215,7 @@ func validateBookDataForAddition(book models.Book) (bool, error) {
 		errorMessages = append(errorMessages, "amount is zero")
 	}
 	if book.OwnedBy != nil {
-		errorMessages = append(errorMessages, "cannot add book with non nil owned_by")
+		errorMessages = append(errorMessages, "cannot add book with non empty owned_by")
 	}
 
 	if len(errorMessages) > 0 {

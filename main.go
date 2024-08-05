@@ -32,5 +32,11 @@ func main() {
 	adminBooksRouter.HandleFunc("", handlers.AddBook).Methods("POST")
 	adminBooksRouter.HandleFunc("/{id}", handlers.DeleteBook).Methods("DELETE")
 	adminBooksRouter.HandleFunc("/{id}", handlers.UpdateBook).Methods("PUT")
+
+	adminUsersRouter := router.PathPrefix("/users").Subrouter()
+	adminUsersRouter.Use(handlers.AuthMiddleware)
+	adminUsersRouter.Use(handlers.RoleMiddleware("admin"))
+	adminUsersRouter.HandleFunc("", handlers.GetUsers).Methods("GET")
+	adminUsersRouter.HandleFunc("/{username}", handlers.GetUserByUsername).Methods("GET")
 	http.ListenAndServe(":8000", router)
 }

@@ -17,9 +17,9 @@ import (
 
 const IDPathVariable = "id"
 const UserRole = "user"
+const UsernamePathVariable = "username"
 
 var jwtKey = []byte(os.Getenv("JWT_KEY")) // Store this securely
-
 type Credentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -52,7 +52,6 @@ func GenerateJWT(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(&apperrors.UnauthenticatedUserError{})
 	}
-
 	// Create JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		jsonconfig.UsernameClaimKey:   user.Username,
@@ -160,4 +159,24 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(success)
+}
+
+func GetUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := userservice.GetAllUsers(r.Context())
+	if err != nil {
+		panic(err)
+	}
+
+	json.NewEncoder(w).Encode(users)
+}
+
+func GetUserByUsername(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars[UsernamePathVariable]
+	user, err := userservice.FindUser(r.Context(), username)
+	if err != nil {
+		panic(err)
+	}
+
+	json.NewEncoder(w).Encode(user)
 }

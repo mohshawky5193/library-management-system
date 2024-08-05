@@ -91,3 +91,21 @@ func findUserByUsername(ctx context.Context, filter interface{}) (*models.User, 
 
 	return &user, error
 }
+
+func GetAllUsers(ctx context.Context) ([]models.User, error) {
+	var users []models.User
+	cursor, err := db.UsersCollection.Find(ctx, bson.D{{}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}

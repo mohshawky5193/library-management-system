@@ -11,7 +11,7 @@ type Book struct {
 type User struct {
 	ID              string   `json:"id" bson:"-"`
 	Username        string   `json:"username"`
-	Password        string   `json:"password"`
+	Password        string   `json:"-"`
 	Role            string   `json:"role"`
 	BorrowedBookIDs []string `json:"borrowed_book_ids" bson:"borrowed_book_ids"`
 }

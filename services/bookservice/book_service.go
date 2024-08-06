@@ -142,15 +142,17 @@ func ReleaseBook(bookId, username string, ctx context.Context) (bool, error) {
 }
 
 func AddBook(book models.Book, ctx context.Context) (bool, error) {
-	_, err := validateBookDataForAddition(book)
-	if err != nil {
-		return false, err
-	}
+
 	filter := bson.M{dbconfig.ID: book.ID}
 	var existingBook models.Book
-	err = db.BooksCollection.FindOne(ctx, filter).Decode(&existingBook)
+	err := db.BooksCollection.FindOne(ctx, filter).Decode(&existingBook)
 	if err == nil {
 		return false, &apperrors.BookWithSameIDError{BookID: book.ID}
+	}
+
+	_, err = validateBookDataForAddition(book)
+	if err != nil {
+		return false, err
 	}
 	_, err = db.BooksCollection.InsertOne(ctx, book)
 	if err != nil {
@@ -177,17 +179,17 @@ func DeleteBook(id string, ctx context.Context) (bool, error) {
 }
 
 func UpdateBook(id string, book models.Book, ctx context.Context) (bool, error) {
-	_, err := validateBookDataForUpdate(book)
-	if err != nil {
-		return false, err
-	}
+
 	filter := bson.M{dbconfig.ID: id}
 	var oldBook models.Book
-	err = db.BooksCollection.FindOne(ctx, filter).Decode(&oldBook)
+	err := db.BooksCollection.FindOne(ctx, filter).Decode(&oldBook)
 	if err != nil {
 		return false, &apperrors.BookNotFoundError{BookID: id}
 	}
-
+	_, err = validateBookDataForUpdate(book)
+	if err != nil {
+		return false, err
+	}
 	update := bson.M{dbconfig.SetOperator: bson.M{dbconfig.Title: book.Title, dbconfig.Author: book.Author, dbconfig.Amount: book.Amount}}
 
 	_, err = db.BooksCollection.UpdateByID(ctx, id, update)
@@ -211,8 +213,8 @@ func validateBookDataForAddition(book models.Book) (bool, error) {
 	if book.Author == "" {
 		errorMessages = append(errorMessages, "author is empty")
 	}
-	if book.Amount == 0 {
-		errorMessages = append(errorMessages, "amount is zero")
+	if book.Amount <= 0 {
+		errorMessages = append(errorMessages, "amount is less than or equal to zero")
 	}
 	if book.OwnedBy != nil {
 		errorMessages = append(errorMessages, "cannot add book with non empty owned_by")
@@ -235,8 +237,8 @@ func validateBookDataForUpdate(book models.Book) (bool, error) {
 	if book.Author == "" {
 		errorMessages = append(errorMessages, "author is empty")
 	}
-	if book.Amount == 0 {
-		errorMessages = append(errorMessages, "amount is zero")
+	if book.Amount <= 0 {
+		errorMessages = append(errorMessages, "amount is less than or equal to zero")
 	}
 	if book.OwnedBy != nil {
 		errorMessages = append(errorMessages, "cannot edit book owned_by")
